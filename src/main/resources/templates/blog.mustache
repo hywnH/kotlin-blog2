@@ -1,0 +1,38 @@
+{{> header}}
+
+<h1><a href="/home">{{title}}</a></h1>
+
+{{#user}}
+    <!-- logged in -->
+    <p>{{user}}</p>
+    <form action="/logout" method="GET">
+        <button type="submit">Log out</button>
+    </form>
+{{/user}}
+
+{{^user}}
+    <!-- logged out -->
+    <a href="/signup">Sign Up</a>
+    <a href="/login">Login</a>
+{{/user}}
+
+<div class="articles">
+    {{#articles}}
+        <section>
+            <header class="article-header">
+                <h2 class="article-title"><a href="/article/{{slug}}">{{title}}</a></h2>
+                <div class="article-meta">By  <strong>{{author.username}}</strong>, on <strong>{{createdAt}}</strong></div>
+            </header>
+            {{#isAuthor}}
+                <form action="/delete" method="POST">
+                    <input type="hidden" name="articleId" value="{{id}}">
+                    <button type="submit">Delete</button>
+                </form>
+            {{/isAuthor}}
+        </section>
+    {{/articles}}
+</div>
+
+<a href="/article/new">Write a new post</a>
+
+{{> footer}}
