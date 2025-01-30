@@ -61,28 +61,18 @@ class UserController(private val userService: UserService) {
         model: Model
     ): String {
         try {
-            userService.authenticate(username, password)
-            request.session.setAttribute("user", username)
-            return "redirect:/home"
+            if (userService.authenticate(username, password)) {
+                request.session.setAttribute("user", username)
+                return "redirect:/home"
+            } else {
+                model.addAttribute("error", "login failed: no such user")
+                return "redirect:/login?error=true"
+            }
         } catch (e: Exception) {
             model.addAttribute("error", "login failed: ${e.message}")
             return "redirect:/login?error=true"
         }
     }
-
-//    @PostMapping("/login")
-//    fun login(@ModelAttribute user: User,
-//              request: HttpServletRequest,
-//              model: Model): String {
-//        try {
-//            userService.authenticate(user.username, user.password)
-//            request.session.setAttribute("user", user.username)
-//            return "redirect:/home"
-//        } catch (e: Exception) {
-//            model.addAttribute("error", "login failed: ${e.message}")
-//            return "redirect:/login?error=true"
-//        }
-//    }
 
     @GetMapping("/logout")
     fun logout(request: HttpServletRequest): String {

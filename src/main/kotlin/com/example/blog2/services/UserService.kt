@@ -17,7 +17,9 @@ class UserService(private val userRepository: UserRepository) {
     }
 
     fun authenticate(username: String, password: String): Boolean {
-        val user = userRepository.findByUsername(username) ?: return false
+        val user = userRepository.findByUsername(username) ?:
+            throw IllegalArgumentException("No such user")
+
         return passwordEncoder.matches(password, user.password)
     }
 }
