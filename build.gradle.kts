@@ -20,6 +20,9 @@ repositories {
 }
 
 dependencies {
+	// coroutines
+	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
@@ -32,7 +35,7 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-security")
 	implementation("org.springframework.boot:spring-boot-starter-mustache")
 	implementation("org.springframework.security:spring-security-crypto")
-	implementation("org.postgresql:postgresql:42.6.0")
+	implementation("org.postgresql:postgresql:42.7.2")
 }
 
 kotlin {

@@ -12,5 +12,7 @@ data class User(
     @Column(nullable = false)
     val password: String,
     @Column(nullable = false)
-    val email: String
+    val email: String,
+    @Column(nullable = false)
+    var balance: Double = 0.0
 )

@@ -3,12 +3,80 @@ package com.example.blog2.controllers
 import com.example.blog2.entities.User
 import com.example.blog2.services.UserService
 import jakarta.servlet.http.HttpServletRequest
+import kotlinx.coroutines.runBlocking
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.ModelAttribute
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestParam
+
+import org.springframework.http.ResponseEntity
+import org.springframework.ui.set
+import org.springframework.web.bind.annotation.*
+
+@Controller
+@RequestMapping("/bank")
+class BankUserController(private val userService: UserService) {
+
+    // ✅ 사용자 정보 조회
+    @GetMapping("/users/{id}")
+    fun getUser(@PathVariable id: Long): ResponseEntity<User> {
+        val user = userService.getUserById(id)
+        return ResponseEntity.ok(user)
+    }
+
+    // ✅ 잔액 조회
+    @GetMapping("/accounts/{id}/balance")
+    fun getBalance(@PathVariable id: Long): ResponseEntity<Double> = runBlocking {
+        val balance = userService.getBalance(id)
+        return@runBlocking ResponseEntity.ok(balance)
+    }
+
+    // ✅ 입금 (Deposit)
+    @PostMapping("/accounts/deposit")
+    fun deposit(@SessionAttribute("user") username: String?, @RequestParam amount: Double): String = runBlocking {
+        val user = username?.let { userService.getUserByUsername(it) } ?: run {
+            throw IllegalArgumentException("login to deposit")
+        }
+        return@runBlocking "redirect:/bank"
+    }
+
+    @PostMapping("/accounts/withdraw")
+    fun withdraw(@SessionAttribute("user") username: String?, @RequestParam amount: Double, model: Model): String = runBlocking {
+        val user = username?.let { userService.getUserByUsername(it) } ?: run {
+            throw IllegalArgumentException("login to withdraw")
+        }
+        return@runBlocking try {
+            "redirect:/bank"
+        } catch (e: IllegalArgumentException) {
+            model.addAttribute("error", "withdraw failed: ${e.message}")
+            "redirect:/bank?error=true"
+        }
+    }
+
+    @PostMapping("/accounts/transfer")
+    fun transfer(
+        @SessionAttribute("user") username: String?,
+        @RequestParam toUsername: String,
+        @RequestParam amount: Double,
+        model: Model
+    ): String = runBlocking {
+        val user = username?.let { userService.getUserByUsername(it) } ?: run {
+            throw IllegalArgumentException("login to withdraw")
+        }
+        val toUser = userService.getUserByUsername(toUsername) ?: run {
+            throw IllegalArgumentException("")
+        }
+        return@runBlocking try {
+            userService.transfer(user.id, toUser.id, amount)
+            "redirect:/bank"
+        } catch (e: IllegalArgumentException) {
+            model.addAttribute("error", "transfer failed: ${e.message}")
+            "redirect:/bank?error=true"
+        }
+    }
+}
 
 @Controller
 class UserController(private val userService: UserService) {
@@ -17,22 +85,6 @@ class UserController(private val userService: UserService) {
     fun signupPage(): String {
         return "signup" // signup.mustache 템플릿
     }
-
-//    @PostMapping("/signup")
-//    fun signup(
-//        @RequestParam username: String,
-//        @RequestParam email: String,
-//        @RequestParam password: String,
-//        model: Model
-//    ): String {
-//        try {
-//            userService.signup(username, email, password)
-//            return "redirect:/login"
-//        } catch (e: Exception) {
-//            model.addAttribute("error", "Signup failed: ${e.message}")
-//            return "signup"
-//        }
-//    }
 
     @PostMapping("/signup")
     fun signup(
@@ -65,7 +117,7 @@ class UserController(private val userService: UserService) {
                 request.session.setAttribute("user", username)
                 return "redirect:/home"
             } else {
-                model.addAttribute("error", "login failed: no such user")
+                model.addAttribute("error", "no such user")
                 return "redirect:/login?error=true"
             }
         } catch (e: Exception) {
@@ -78,6 +130,15 @@ class UserController(private val userService: UserService) {
     fun logout(request: HttpServletRequest): String {
         request.session.invalidate()
         return "redirect:/home"
+    }
+
+    @GetMapping("/bank")
+    fun bank(@SessionAttribute("user") username: String?, model: Model): String {
+        val user = username?.let { userService.getUserByUsername(it) }
+        model["title"] = "Banking Services"
+        model["user"] = user?.username
+        model["balance"] = user?.balance
+        return "bank"
     }
 
 }
