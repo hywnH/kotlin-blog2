@@ -2,35 +2,30 @@
 
 <h1>Banking Services</h1>
 
-<!-- ✅ 로그인 여부 확인 -->
 {{#user}}
     <p>Welcome, {{user}}! <a href="/logout">Logout</a></p>
 
-    <!-- ✅ 잔액 조회 -->
     <h2>Your Account</h2>
     <p>Balance: <strong>{{balance}}</strong> USD</p>
 
-    <!-- ✅ 입금 -->
     <h2>Deposit</h2>
     <form action="/bank/accounts/deposit" method="post">
-        <input type="hidden" name="userId" value="{{user}}">
+        <input type="hidden" name="userName" value="{{user}}">
         <input type="number" name="amount" placeholder="Amount" required>
         <button type="submit">Deposit</button>
     </form>
 
-    <!-- ✅ 출금 -->
     <h2>Withdraw</h2>
     <form action="/bank/accounts/withdraw" method="post">
-        <input type="hidden" name="userId" value="{{user}}">
+        <input type="hidden" name="userName" value="{{user}}">
         <input type="number" name="amount" placeholder="Amount" required>
         <button type="submit">Withdraw</button>
     </form>
 
-    <!-- ✅ 송금 -->
     <h2>Transfer</h2>
     <form action="/bank/accounts/transfer" method="post">
-        <input type="hidden" name="fromUserId" value="{{user}}">
-        <input type="text" name="toUserId" placeholder="Recipient Username" required>
+        <input type="hidden" name="userName" value="{{user}}">
+        <input type="text" name="toUserName" placeholder="Recipient Username" required>
         <input type="number" name="amount" placeholder="Amount" required>
         <button type="submit">Send Money</button>
     </form>

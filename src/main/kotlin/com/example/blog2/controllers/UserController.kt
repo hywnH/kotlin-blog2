@@ -19,27 +19,18 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping("/bank")
 class BankUserController(private val userService: UserService) {
 
-    // ✅ 사용자 정보 조회
-    @GetMapping("/users/{id}")
-    fun getUser(@PathVariable id: Long): ResponseEntity<User> {
-        val user = userService.getUserById(id)
-        return ResponseEntity.ok(user)
-    }
-
-    // ✅ 잔액 조회
-    @GetMapping("/accounts/{id}/balance")
-    fun getBalance(@PathVariable id: Long): ResponseEntity<Double> = runBlocking {
-        val balance = userService.getBalance(id)
-        return@runBlocking ResponseEntity.ok(balance)
-    }
-
-    // ✅ 입금 (Deposit)
     @PostMapping("/accounts/deposit")
-    fun deposit(@SessionAttribute("user") username: String?, @RequestParam amount: Double): String = runBlocking {
+    fun deposit(@SessionAttribute("user") username: String?, @RequestParam amount: Double, model: Model): String = runBlocking {
         val user = username?.let { userService.getUserByUsername(it) } ?: run {
-            throw IllegalArgumentException("login to deposit")
+            throw IllegalArgumentException("login to withdraw")
         }
-        return@runBlocking "redirect:/bank"
+        return@runBlocking try {
+            userService.deposit(user.id, amount)
+            "redirect:/bank"
+        } catch (e: IllegalArgumentException) {
+            model.addAttribute("error", "withdraw failed: ${e.message}")
+            "redirect:/bank?error=true"
+        }
     }
 
     @PostMapping("/accounts/withdraw")
@@ -48,6 +39,7 @@ class BankUserController(private val userService: UserService) {
             throw IllegalArgumentException("login to withdraw")
         }
         return@runBlocking try {
+            userService.withdraw(user.id, amount)
             "redirect:/bank"
         } catch (e: IllegalArgumentException) {
             model.addAttribute("error", "withdraw failed: ${e.message}")
@@ -58,15 +50,15 @@ class BankUserController(private val userService: UserService) {
     @PostMapping("/accounts/transfer")
     fun transfer(
         @SessionAttribute("user") username: String?,
-        @RequestParam toUsername: String,
+        @RequestParam toUserName: String,
         @RequestParam amount: Double,
         model: Model
     ): String = runBlocking {
         val user = username?.let { userService.getUserByUsername(it) } ?: run {
             throw IllegalArgumentException("login to withdraw")
         }
-        val toUser = userService.getUserByUsername(toUsername) ?: run {
-            throw IllegalArgumentException("")
+        val toUser = userService.getUserByUsername(toUserName) ?: run {
+            throw IllegalArgumentException("wrong recipient")
         }
         return@runBlocking try {
             userService.transfer(user.id, toUser.id, amount)
