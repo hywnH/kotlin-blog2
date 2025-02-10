@@ -16,61 +16,6 @@ import org.springframework.ui.set
 import org.springframework.web.bind.annotation.*
 
 @Controller
-@RequestMapping("/bank")
-class BankUserController(private val userService: UserService) {
-
-    @PostMapping("/accounts/deposit")
-    fun deposit(@SessionAttribute("user") username: String?, @RequestParam amount: Double, model: Model): String = runBlocking {
-        val user = username?.let { userService.getUserByUsername(it) } ?: run {
-            throw IllegalArgumentException("login to withdraw")
-        }
-        return@runBlocking try {
-            userService.deposit(user.id, amount)
-            "redirect:/bank"
-        } catch (e: IllegalArgumentException) {
-            model.addAttribute("error", "withdraw failed: ${e.message}")
-            "redirect:/bank?error=true"
-        }
-    }
-
-    @PostMapping("/accounts/withdraw")
-    fun withdraw(@SessionAttribute("user") username: String?, @RequestParam amount: Double, model: Model): String = runBlocking {
-        val user = username?.let { userService.getUserByUsername(it) } ?: run {
-            throw IllegalArgumentException("login to withdraw")
-        }
-        return@runBlocking try {
-            userService.withdraw(user.id, amount)
-            "redirect:/bank"
-        } catch (e: IllegalArgumentException) {
-            model.addAttribute("error", "withdraw failed: ${e.message}")
-            "redirect:/bank?error=true"
-        }
-    }
-
-    @PostMapping("/accounts/transfer")
-    fun transfer(
-        @SessionAttribute("user") username: String?,
-        @RequestParam toUserName: String,
-        @RequestParam amount: Double,
-        model: Model
-    ): String = runBlocking {
-        val user = username?.let { userService.getUserByUsername(it) } ?: run {
-            throw IllegalArgumentException("login to withdraw")
-        }
-        val toUser = userService.getUserByUsername(toUserName) ?: run {
-            throw IllegalArgumentException("wrong recipient")
-        }
-        return@runBlocking try {
-            userService.transfer(user.id, toUser.id, amount)
-            "redirect:/bank"
-        } catch (e: IllegalArgumentException) {
-            model.addAttribute("error", "transfer failed: ${e.message}")
-            "redirect:/bank?error=true"
-        }
-    }
-}
-
-@Controller
 class UserController(private val userService: UserService) {
 
     @GetMapping("/signup")
